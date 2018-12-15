@@ -28,11 +28,11 @@ class Agent:
     def _initialiseModel(self):
         # Need to initialise each state action pair -> all will be 0?
         # Q should be an array of structure:
-        # [[[s1,a1], [s1,a2], [s1,a3], [s1,a4]],
-        #  [[s2,a1], [s2,a2], [s2,a3], [s2,a4]], etc
+        # [[a1, a2, a3, a4], -- State 0 ([0][0])
+        #  [a1, a2, a3, a4], -- State 1 ([0][1]) etc
+        Q = np.zeros((stateCnt,actionCnt))
 
-        for i in range(stateCnt):
-
+        return Q
 
     def predict_value(self, s):
         # Get value at each state in four directions
