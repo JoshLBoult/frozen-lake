@@ -104,6 +104,9 @@ class World:
 
             # Break if terminal state reached
             if done == True:
+                # Record success if goal reached
+                if r == 1.0:
+                    success = True
                 break
             else:
 
@@ -112,7 +115,7 @@ class World:
         # self.q_Sinit_progress = np.append( ): use q_Sinit_progress for monitoring the q value progress throughout training episodes for all available actions at the initial state.
         self.q_Sinit_progress = np.append(agent.predict_value(0))
 
-        return r_total, episodeStepsCnt
+        return r_total, episodeStepsCnt, success
 
     def run_episode_sarsa(self):
         s               = self.env.reset() # "reset" environment to start state
@@ -135,6 +138,9 @@ class World:
 
             # Break if terminal state reached
             if done == True:
+                # Record success if goal reached
+                if r == 1.0:
+                    success = True
                 break
             else:
 
@@ -143,7 +149,7 @@ class World:
 
         self.q_Sinit_progress = np.append(agent.predict_value(0))
 
-        return r_total, episodeStepsCnt
+        return r_total, episodeStepsCnt, success
 
     def run_evaluation_episode(self):
         s = self.env.reset()
@@ -174,8 +180,11 @@ if __name__ == '__main__':
     nbOfTrainingEpisodes     = 50
     for i in range(nbOfTrainingEpisodes):
         print '\n========================\n   Episode: {}\n========================'.format(i)
-        r_total_progress, episodeStepsCnt_progress = run_episode_qlearning()
-        # run_episode_sarsa()
+        r_total, episodeStepsCnt, success = run_episode_qlearning()
+        # r_total, episodeStepsCnt = run_episode_sarsa()
+        if success = True:
+            r_total_progress = np.append(r_total)
+            episodeStepsCnt_progress = np.append(episodeStepsCnt)
     run_evaluation_episode()
 
     ### --- Plots --- ###
