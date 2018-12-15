@@ -124,11 +124,25 @@ class World:
             # Take step to the next states
             s_prev = s
             a = agent.choose_action(s)
+            s, r, done = self.env.step(a)
+            a_next = agent.choose_action(s)
 
-            # self.env.step(a): "step" will execute action "a" at the current agent state and move the agent to the nect state.
-            # step will return the next state, the reward, a boolean indicating if a terminal state is reached, and some diagnostic information useful for debugging.
-            # self.env.render(): "render" will print the current enviroment state.
-            # self.q_Sinit_progress = np.append( ): use q_Sinit_progress for monitoring the q value progress throughout training episodes for all available actions at the initial state
+            # Update value function
+            agent.update_value_SARSA(s_prev,a,r,s,a_next, !done)
+
+            # Print the current environment state
+            self.env.render()
+
+            # Break if terminal state reached
+            if done == True:
+                break
+            else:
+
+            r_total += r
+            episodeStepsCnt += 1
+
+        self.q_Sinit_progress = np.append(agent.predict_value(0))
+        
         return r_total, episodeStepsCnt
 
     def run_evaluation_episode(self):
