@@ -26,7 +26,7 @@ class Agent:
         self.Q             = self._initialiseModel()
 
     def _initialiseModel(self):
-        # Need to initialise each state action pair -> all will be 0?
+        # Need to initialise each state action pair as 0
         # Q should be an array of structure:
         # [[a1, a2, a3, a4], -- State 0 ([0][0])
         #  [a1, a2, a3, a4], -- State 1 ([0][1]) etc
@@ -35,24 +35,8 @@ class Agent:
         return Q
 
     def predict_value(self, s):
-        # Get value at each state in four directions
-        # Change s into row and column format
-        row = s // self.env.ncol
-        col = s % self.env.ncol
-        # Initialise the array with zeros, as that is the most likely reward
-        value_array = np.zeros(4)
-
-        # Iterate through the outcome of all actions, updating the array if
-        # the goal is reachable
-        for i in range(actionCnt):
-            new_state = self.env.inc(row, col, i)
-            letter = desc[new_state]
-            if letter in 'HSF':
-                # do nothing, value already 0
-            else:
-                value_array[i] = 1
-
-        return value_array
+        # Simply return the relevant row from Q
+        return self.Q[s]
 
     def update_value_Qlearning(self, s,a,r,s_next, goalNotReached):
         # Simply add the value of s_next and gamma*(value of state after s_next
