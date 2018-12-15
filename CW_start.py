@@ -22,7 +22,7 @@ class Agent:
         self.actionCnt     = self.env.action_space.n # left:0; down:1; right:2; up:3
         self.learning_rate = 0.1
         self.gamma         = 0.9
-        self.epsilon       = 0.8
+        self.epsilon       = 0.1
         self.Q             = self._initialiseModel()
 
     def _initialiseModel(self):
@@ -34,34 +34,42 @@ class Agent:
 
         return Q
 
+
     def predict_value(self, s):
         # Simply return the relevant row from Q
         return self.Q[s]
 
-    def update_value_Qlearning(self, s,a,r,s_next, goalNotReached):
-        # Simply add the value of s_next and gamma*(value of state after s_next
-        # and action a)
-        # Or q(k+1)(s,a) = q(k)(s,a) + lr*(rew(t+1) + "max_action" gamma*q(k)(s_next,a_next) - q(k)(s,a))
-        # In this case estimate = (lr*?)(reward at s_next) + lr*(reward at second_state + gamma*(second_state from s_next and max_action - (lr*?)(reward at s_next)))
-        # if in a terminal state with no s_next/s_nextnext
-        value_estimate = 0
-        row = s_next // self.env.ncol
-        col = s_next % self.env.ncol
-        second_state = self.env.inc(row, col, a)
 
-        letter_s_next = desc[row, col]
-        letter_second_state = desc[second_state]
+    def update_value_Qlearning(self, s,a,r,s_next, terminalStateNotReached):
+        # Update if s is not a terminal state
+        if terminalStateNotReached:
+            self.Q[s][a] = self.Q[s][a] + self.learning_rate*(r - self.Q[s][a] + self.gamma*np.amax(self.Q[s_next]))
 
-        if letter_s_next in 'G':
-            value_estimate += 1
-        if letter_second_state in 'G':
-            value_estimate += self.gamma
+        # Update if s is any type of terminal state
+        else:
+            self.Q[s][a] = self.Q[s][a] + self.learning_rate*(r - self.Q[s][a])
 
-        return value_estimate
 
-    def update_value_SARSA(self, s,a,r,s_next, a_next, goalNotReached):
+    def update_value_SARSA(self, s,a,r,s_next, a_next, terminalStateNotReached):
+        # Update if s is not a terminal state
+        if terminalStateNotReached:
+            self.Q[s][a] = self.Q[s][a] + self.learning_rate*(r - self.Q[s][a] + self.gamma*self.Q[s_next][a_next]))
+
+        # Update if s is any type of terminal state
+        else:
+            self.Q[s][a] = self.Q[s][a] + self.learning_rate*(r - self.Q[s][a])
+
 
     def choose_action(self, s):
+        # Random float between 0 and 1
+        # If greater than epsilon value, choose optimal action
+        if random.random() > self.epsilon:
+            a = np.amax(self.Q[s])
+        # If less than or equal to epsilon, choose any random action (inc. optimal)
+        else:
+            a = random.randrange(0,4,1)
+        return a
+
 
     def updateEpsilon(self, episodeCounter):
 
@@ -72,19 +80,46 @@ class World:
         print('Environment has %d states and %d actions.' % (self.env.observation_space.n, self.env.action_space.n))
         self.stateCnt           = self.env.observation_space.n
         self.actionCnt          = self.env.action_space.n
-        self.maxStepsPerEpisode =
-        self.q_Sinit_progress   = # ex: np.array([[0,0,0,0]])
+        self.maxStepsPerEpisode = 20
+        self.q_Sinit_progress   = agent.Q[0] # ex: np.array([[0,0,0,0]])
 
     def run_episode_qlearning(self):
         s               = self.env.reset() # "reset" environment to start state
         r_total         = 0
         episodeStepsCnt = 0
         success         = False
+        terminalStateNotReached = True
+
         for i in range(self.maxStepsPerEpisode):
+            # Update value functions
+            for j in range(self.actionCnt):
+                nextState =
+                agent.update_value_Qlearning(s,j,r,s_next, terminalStateNotReached)
+
+
+            # Take next step or exit if terminal state reached
             # self.env.step(a): "step" will execute action "a" at the current agent state and move the agent to the nect state.
             # step will return the next state, the reward, a boolean indicating if a terminal state is reached, and some diagnostic information useful for debugging.
+            self.env.step(agent.choose_action(s))
+
             # self.env.render(): "render" will print the current enviroment state.
-            # self.q_Sinit_progress = np.append( ): use q_Sinit_progress for monitoring the q value progress throughout training episodes for all available actions at the initial state.
+            self.env.render()
+
+            # Find letter/value of state
+            row = s // self.env.ncol
+            col = s % self.env.ncol
+            letter = self.env.desc[row][col]
+            # Check for terminal state
+            if letter in 'G':
+                success = True
+                terminalStateNotReached = False
+                r_total += 1
+            elif letter in 'H':
+                terminalStateNotReached = False
+
+        # self.q_Sinit_progress = np.append( ): use q_Sinit_progress for monitoring the q value progress throughout training episodes for all available actions at the initial state.
+        self.q_Sinit_progress = np.append(agent.predict_value(0))
+
         return r_total, episodeStepsCnt
 
     def run_episode_sarsa(self):
@@ -110,7 +145,7 @@ if __name__ == '__main__':
     agent                    = Agent(env) # This will creat an agent
     r_total_progress         = []
     episodeStepsCnt_progress = []
-    nbOfTrainingEpisodes     =
+    nbOfTrainingEpisodes     = 50
     for i in range(nbOfEpisodes):
         print '\n========================\n   Episode: {}\n========================'.format(i)
         # run_episode_qlearning or run_episode_sarsa
