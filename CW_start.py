@@ -142,11 +142,26 @@ class World:
             episodeStepsCnt += 1
 
         self.q_Sinit_progress = np.append(agent.predict_value(0))
-        
+
         return r_total, episodeStepsCnt
 
     def run_evaluation_episode(self):
+        s = self.env.reset()
         agent.epsilon = 0
+        success = False
+
+        for i in range(self.maxStepsPerEpisode):
+            # Move to next state
+            s, r, done = self.env.step(agent.choose_action(s))
+
+            # Render
+            self.env.render()
+
+
+            if r == 1.0:
+                success = True
+                break
+
         return success
 
 
@@ -157,11 +172,11 @@ if __name__ == '__main__':
     r_total_progress         = []
     episodeStepsCnt_progress = []
     nbOfTrainingEpisodes     = 50
-    for i in range(nbOfEpisodes):
+    for i in range(nbOfTrainingEpisodes):
         print '\n========================\n   Episode: {}\n========================'.format(i)
-        # run_episode_qlearning or run_episode_sarsa
-        # append to r_total_progress and episodeStepsCnt_progress
-    # run_evaluation_episode
+        r_total_progress, episodeStepsCnt_progress = run_episode_qlearning()
+        # run_episode_sarsa()
+    run_evaluation_episode()
 
     ### --- Plots --- ###
     # 1) plot world.q_Sinit_progress
