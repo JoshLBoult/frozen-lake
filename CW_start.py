@@ -30,7 +30,7 @@ class Agent:
         # Q should be an array of structure:
         # [[a1, a2, a3, a4], -- State 0 ([0][0])
         #  [a1, a2, a3, a4], -- State 1 ([0][1]) etc
-        Q = np.zeros((stateCnt,actionCnt))
+        Q = np.zeros((self.stateCnt,self.actionCnt))
 
         return Q
 
@@ -53,7 +53,7 @@ class Agent:
     def update_value_SARSA(self, s,a,r,s_next, a_next, terminalStateNotReached):
         # Update if s is not a terminal state
         if terminalStateNotReached:
-            self.Q[s][a] = self.Q[s][a] + self.learning_rate*(r - self.Q[s][a] + self.gamma*self.Q[s_next][a_next]))
+            self.Q[s][a] = self.Q[s][a] + self.learning_rate*(r - self.Q[s][a] + self.gamma*self.Q[s_next][a_next])
 
         # Update if s is any type of terminal state
         else:
@@ -71,7 +71,7 @@ class Agent:
         return a
 
 
-    def updateEpsilon(self, episodeCounter):
+    #def updateEpsilon(self, episodeCounter):
 
 
 class World:
@@ -97,7 +97,7 @@ class World:
             s, r, done = self.env.step(a)
 
             # Update value function
-            agent.update_value_Qlearning(s_prev,a,r,s,!done)
+            agent.update_value_Qlearning(s_prev,a,r,s,not done)
 
             # Print the current environment state
             self.env.render()
@@ -108,7 +108,6 @@ class World:
                 if r == 1.0:
                     success = True
                 break
-            else:
 
             r_total += r
             episodeStepsCnt += 1
@@ -131,7 +130,7 @@ class World:
             a_next = agent.choose_action(s)
 
             # Update value function
-            agent.update_value_SARSA(s_prev,a,r,s,a_next, !done)
+            agent.update_value_SARSA(s_prev,a,r,s,a_next, not done)
 
             # Print the current environment state
             self.env.render()
@@ -142,7 +141,6 @@ class World:
                 if r == 1.0:
                     success = True
                 break
-            else:
 
             r_total += r
             episodeStepsCnt += 1
@@ -180,12 +178,12 @@ if __name__ == '__main__':
     nbOfTrainingEpisodes     = 50
     for i in range(nbOfTrainingEpisodes):
         print '\n========================\n   Episode: {}\n========================'.format(i)
-        r_total, episodeStepsCnt, success = run_episode_qlearning()
-        # r_total, episodeStepsCnt = run_episode_sarsa()
-        if success = True:
+        r_total, episodeStepsCnt, success = world.run_episode_qlearning()
+        # r_total, episodeStepsCnt = world.run_episode_sarsa()
+        if success == True:
             r_total_progress = np.append(r_total)
             episodeStepsCnt_progress = np.append(episodeStepsCnt)
-    run_evaluation_episode()
+    world.run_evaluation_episode()
 
     ### --- Plots --- ###
     # 1) plot world.q_Sinit_progress
