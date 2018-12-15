@@ -88,35 +88,27 @@ class World:
         r_total         = 0
         episodeStepsCnt = 0
         success         = False
-        terminalStateNotReached = True
 
         for i in range(self.maxStepsPerEpisode):
-            # Update value functions
-            for j in range(self.actionCnt):
-                nextState =
-                agent.update_value_Qlearning(s,j,r,s_next, terminalStateNotReached)
-
-
-            # Take next step or exit if terminal state reached
-            # self.env.step(a): "step" will execute action "a" at the current agent state and move the agent to the nect state.
+            # Take step to the next state
             # step will return the next state, the reward, a boolean indicating if a terminal state is reached, and some diagnostic information useful for debugging.
-            self.env.step(agent.choose_action(s))
+            s_prev = s
+            a = agent.choose_action(s)
+            s, r, done = self.env.step(a)
 
-            # self.env.render(): "render" will print the current enviroment state.
+            # Update value function
+            agent.update_value_Qlearning(s_prev,a,r,s,!done)
+
+            # Print the current environment state
             self.env.render()
 
-            # Find letter/value of state
-            row = s // self.env.ncol
-            col = s % self.env.ncol
-            letter = self.env.desc[row][col]
-            # Check for terminal state
-            if letter in 'G':
-                success = True
-                terminalStateNotReached = False
-                r_total += 1
-            elif letter in 'H':
-                terminalStateNotReached = False
+            # Break if terminal state reached
+            if done == True:
+                break
+            else:
 
+            r_total += r
+            episodeStepsCnt += 1
         # self.q_Sinit_progress = np.append( ): use q_Sinit_progress for monitoring the q value progress throughout training episodes for all available actions at the initial state.
         self.q_Sinit_progress = np.append(agent.predict_value(0))
 
@@ -127,7 +119,12 @@ class World:
         r_total         = 0
         episodeStepsCnt = 0
         success         = False
+
         for i in range(self.maxStepsPerEpisode):
+            # Take step to the next states
+            s_prev = s
+            a = agent.choose_action(s)
+
             # self.env.step(a): "step" will execute action "a" at the current agent state and move the agent to the nect state.
             # step will return the next state, the reward, a boolean indicating if a terminal state is reached, and some diagnostic information useful for debugging.
             # self.env.render(): "render" will print the current enviroment state.
