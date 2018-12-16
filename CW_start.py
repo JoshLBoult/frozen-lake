@@ -20,13 +20,14 @@ class Agent:
     def __init__(self, env):
         self.stateCnt      = env.observation_space.n
         self.actionCnt     = env.action_space.n # left:0; down:1; right:2; up:3
-        self.learning_rate = 0.5
+        self.learning_rate = 0.55
         self.gamma         = 0.9
-        self.epsilon       = 0.8
+        self.epsilon       = 0.5
         self.Q             = self._initialiseModel()
 
     def _initialiseModel(self):
-        # Need to initialise each state action pair as 0
+        # Need to initialise each state action pair as 1 so the agent is always optimisic
+        # This is because the reward is almost always 0
         # Q should be an array of structure:
         # [[a1, a2, a3, a4], -- State 0 ([0][0])
         #  [a1, a2, a3, a4], -- State 1 ([0][1]) etc
@@ -71,8 +72,9 @@ class Agent:
         return a
 
 
-    #def updateEpsilon(self, episodeCounter):
-
+    def updateEpsilon(self, episodeCounter):
+        if (episodeCounter % 200) == 0:
+            self.epsilon -= 0.05
 
 class World:
     def __init__(self, env):
@@ -81,17 +83,16 @@ class World:
         self.stateCnt           = self.env.observation_space.n
         self.actionCnt          = self.env.action_space.n
         self.maxStepsPerEpisode = 1000
-        self.q_Sinit_progress   = np.array([[1,1,1,1]]) # All initial actions have reward 0 at start state
+        self.q_Sinit_progress   = np.array([[1,1,1,1]]) # All initial actions have reward 1 at start state
 
     def run_episode_qlearning(self):
         s               = self.env.reset() # "reset" environment to start state
-        r_total         = 0
+        r_total         = 0.0
         episodeStepsCnt = 0
         success         = False
 
         for i in range(self.maxStepsPerEpisode):
             # Take step to the next state
-            # step will return the next state, the reward, a boolean indicating if a terminal state is reached, and some diagnostic information useful for debugging.
             s_prev = s
             a = agent.choose_action(s)
             s, r, done, diag = self.env.step(a)
@@ -102,17 +103,16 @@ class World:
             # Print the current environment state
             self.env.render()
 
-            print(done)
             # Break if terminal state reached
             if done == True:
-                # Record success if goal reached
+                # Record success if goal reached and increment r_total
                 if r == 1.0:
                     success = True
+                    r_total += r
                 break
 
-            r_total += r
             episodeStepsCnt += 1
-        # self.q_Sinit_progress = np.append( ): use q_Sinit_progress for monitoring the q value progress throughout training episodes for all available actions at the initial state.
+        # Append the updated Q values for the start state
         self.q_Sinit_progress = np.append(self.q_Sinit_progress, [agent.predict_value(0)], axis=0)
 
         return r_total, episodeStepsCnt, success
@@ -141,9 +141,9 @@ class World:
                 # Record success if goal reached
                 if r == 1.0:
                     success = True
+                    r_total += r
                 break
 
-            r_total += r
             episodeStepsCnt += 1
 
         self.q_Sinit_progress = np.append(self.q_Sinit_progress, [agent.predict_value(0)], axis=0)
@@ -162,9 +162,9 @@ class World:
             # Render
             self.env.render()
 
-
-            if r == 1.0:
-                success = True
+            if done == True:
+                if r == 1.0:
+                    success = True
                 break
 
         return success
@@ -172,6 +172,7 @@ class World:
 
 if __name__ == '__main__':
     env                      = gym.make('FrozenLakeNotSlippery-v0')
+    # env                      = gym.make('FrozenLake8x8-v0') # Slippery
     world                    = World(env)
     agent                    = Agent(env) # This will creat an agent
     r_total_progress         = []
@@ -180,16 +181,14 @@ if __name__ == '__main__':
     for i in range(nbOfTrainingEpisodes):
         print('\n========================\n   Episode: {}\n========================'.format(i))
         r_total, episodeStepsCnt, success = world.run_episode_qlearning()
-        # r_total, episodeStepsCnt = world.run_episode_sarsa()
+        # r_total, episodeStepsCnt, success = world.run_episode_sarsa()
+        r_total_progress = np.append(r_total_progress, [r_total], axis=0)
         if success == True:
-            r_total_progress = np.append(r_total_progress, [r_total], axis=0)
             episodeStepsCnt_progress = np.append(episodeStepsCnt_progress, [episodeStepsCnt], axis=0)
+        agent.updateEpsilon(i)
+
     success = world.run_evaluation_episode()
     print(success)
-
-    print(r_total_progress)
-    print(episodeStepsCnt_progress)
-    print(world.q_Sinit_progress)
 
     ### --- Plots --- ###
     # 1) plot world.q_Sinit_progress
